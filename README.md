@@ -1,81 +1,19 @@
-📊 Azure Automated Crypto ETL & Power BI Pipeline
-This is a comprehensive End-to-End Data Engineering project that automates the ingestion, storage, transformation, and professional visualization of real-time cryptocurrency data using the Microsoft Azure Ecosystem and Power BI.
+Automated Crypto ETL & Power BI Pipeline in Azure This captures all elements of an Automated End-to-End Data Engineering process to automatically ingest, store, convert, and visualize real-time crypto data. Architecture and Medallion Flow: Bronze = Unstructured JSON files from CoinGecko API will be stored in MS Azure Blob Storage.
 
-🏗️ Architecture & Medallion Workflow
-The project follows the Medallion Architecture to ensure data quality and separation of concerns:
+  Data was transferred from JSON to Azure SQL Database through Azure Data Factory and all data has been cleansed. Market data with optimised SQL views are provided for reporting purposes for daily high-performance snapshots of the market. Tech Stack Source: - CoinGecko API Data Orchestration and Ingestion: - Azure Logic Apps (Daily Triggers) Storage: - Data Lake - MongoDB Azure Blob ETL/Integration: - Azure Data Factory (ADF) Data Warehouse: - Silver - Azure SQL Database - Gold - Azure SQL Database
 
-Bronze (Raw): Unstructured JSON files from CoinGecko API stored in Azure Blob Storage.
+  Visualization - Power BI Desktop and Power BI Service (using the cloud) Workflow Details for Workflows to Ingest data into the System: Azure Logic Apps functions daily to ingest data from external applications through HTTP GET requests and save that information to Blob Storage with dynamic timestamps, using the format "crypto_@@@@TIMESTAMP@@@.json."
+  
+  ETL & Alteration (Silver Layer) Azure Data Factory controls migration of data into SQL database. Copy Activity: Uses wildcard paths for processing all daily JSON files. Schema Mapping: Accurately maps nested values in JSON to structured columns in SQL (with the appropriate conversions of type from JSON to ISO/Decimal for financial accuracy).
+  
+  In the Gold Layer of the Data Modeling process, the dashboard has been significantly enhanced through the implementation of a Gold View in SQL. Rather than load millions of historical rows into the “Current Price” card, we implemented a view that will return the most recent records of all corresponding crypto price from the CryptoPrices table. The SQL for that is as follows: SQL CREATE VIEW vw_gold_aktualne_ceny AS SELECT name, price_usd, last_updated FROM CryptoPrices WHERE last_updated = (SELECT MAX(last_updated) FROM CryptoPrices) Professional Visualizations in Power BI have been utilized to display, visually present or otherwise provide actionable insights via the following:
+  
+  Slicers for Interaction: A Group of Buttons Allow for Smoothly Swapping Tokens between Bitcoin, Ethereum, and Solana. More Complex Formatting: Dark Mode User Interface Design and Build with Conditional Color Gradients in Bar Chart Representations for Highlighting Top Token by Bar Height. AI/ML and Other Automation Tools for Data: Smart Narratives Generated Between the Data Explaining Market Trends In A Simple Way. DAX Custom Measure examples: Logic used to Format Currency Appropriately and Avoid Providing "Auto-scaled" Value Representations (e.g. for "K" when indicating number of thousands, providing a true value).
 
-Silver (Structured): Cleaned data moved from JSON to Azure SQL Database via Azure Data Factory.
-
-Gold (Curated): Optimized SQL Views that provide only the latest market snapshots for high-performance reporting.
-
-🛠️ Tech Stack
-Source: CoinGecko API
-
-Orchestration & Ingestion: Azure Logic Apps (Daily Trigger)
-
-Data Lake (Bronze): Azure Blob Storage
-
-ETL & Integration: Azure Data Factory (ADF)
-
-Data Warehouse (Silver/Gold): Azure SQL Database
-
-Visualization: Power BI Desktop & Power BI Service (Cloud)
-
-🔄 Workflow Details
-1. Ingestion (Bronze Layer)
-Azure Logic Apps runs on a daily schedule.
-
-It fetches data via HTTP GET and saves it to Blob Storage with a dynamic timestamp: crypto_@{utcNow()}.json.
-
-2. ETL & Transformation (Silver Layer)
-Azure Data Factory manages the move to SQL.
-
-Copy Activity: Uses wildcard paths to process all daily JSON files.
-
-Schema Mapping: Precisely maps nested JSON values to structured SQL columns (converting types to Double/Decimal for financial accuracy).
-
-3. Data Modeling (Gold Layer)
-To optimize the dashboard, we implemented a Gold View in SQL. Instead of loading millions of historical rows into the "Current Price" card, we use a view that calculates the latest state:
-
-SQL
-CREATE VIEW vw_gold_aktualne_ceny AS
-SELECT name, price_usd, last_updated
-FROM CryptoPrices
-WHERE last_updated = (SELECT MAX(last_updated) FROM CryptoPrices);
-4. Professional Visualization (Power BI)
-The final dashboard provides actionable insights through:
-
-Interactive Slicers: Tile-style buttons for seamless switching between Bitcoin, Ethereum, and Solana.
-
-Advanced Formatting: Dark mode UI with Conditional Color Gradients on bar charts (highlighting top performers).
-
-AI Integration: Smart Narrative summaries that automatically explain market trends in plain language.
-
-DAX Custom Measures: Custom logic to handle currency formatting and avoid "Auto-scaling" issues (e.g., removing the "K" for thousands to show exact values).
-
-🛠️ Problem Solving & Technical Challenges
-🗓️ The ISO Date Challenge (Power Query)
-The API provided timestamps in an ISO format (e.g., 2026-03-30T12:00:00Z) which caused errors in standard European locales.
-
-Solution: Implemented a "Using Locale" transformation in Power Query, forcing the interpreter to use English (United States) for the last_updated column.
-
-
-💰 Precision Formatting (DAX)
-To ensure the dashboard displayed exact dollar values without forced rounding or "K" suffixes, I developed a custom DAX measure:
-
-Útržok kódu
-Cena Displej = FORMAT(SUM(vw_gold_aktualne_ceny[price_usd]), "#,##0.00 $")
-🚀 End-to-End Automation
-The entire pipeline is fully autonomous:
-
-07:00 AM: Azure Logic Apps & ADF Trigger start the data flow.
-
-07:15 AM: Data is cleaned and stored in Azure SQL.
-
-08:00 AM: Power BI Cloud Scheduled Refresh triggers, pulling the new "Gold" data.
-
-Result: The user wakes up to a fresh, updated dashboard without a single manual click.
+  🛠️ Troubleshooting and Technical Difficulties 🗓️ ISO Date Challenge (Power Query) The timestamps provided in the API were all iso formatted i.e., 2026-03-30T12:00:00Z and not suitable for standard European locale formats which led to many issues.
+  
+  We addressed the issue of converting all datetime data into a consistent Eastern Time (ET) format after importing it into Power Query by adding a transformation to the Power Query in order to change the Locale of our importing process to English (United States) for the last_updated column. Precision Formatting of Currency (DAX) To allow the dashboard to present precise amounts for USD without forced rounding as well as not having the USD appear with a "K" at end of amount, I wrote a custom DAX measure which calculated a display price as follows: Price Display = FORMAT(SUM(vw_gold_aktualne_ceny[price_usd]), "#,##0.00 $") End-to-End Automation The entire data flow from beginning to end is completely automated. Thus: At 7:00 AM, the flow of data is triggered by Azure Logic Apps & ADF.
+  
+  07:15 AM: Azure SQL cleans data and saves it. 08:00 AM: Scheduled refresh of Power BI Cloud is used to get updated Gold data. End Result: The user has a fully updated dashboard when they wake up, without having to click anything.
 
 <img width="1542" height="871" alt="Krypto Power Bi" src="https://github.com/user-attachments/assets/f1fc145c-cf58-4272-8064-8530da75fad1" />
